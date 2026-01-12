@@ -2,23 +2,15 @@
 Object.defineProperty(exports, "__esModule", { value: true })
 exports.stringify = stringify
 exports.parse = parse
-const RESERVED = new Set(["true", "false", "null"])
-const UNSAFE = [":", ",", "{", "}", "[", "]", '"', ";", "\\"]
+// Starts with whitespace, ends with whitespace, is empty, is true/false/null, or contains special characters
+const UNSAFE_REGEX = /(^\s|\s$|^$|^true$|^false$|^null$|[:\,{}\[\];"\\])/
+const UNSAFE_KEY_REGEX = /(^\s|\s$|^$|^true$|^false$|^null$|[.:\,{}\[\];"\\])/
 const WS_RE = /\s/
 const KEY_TERM_RE = /[:\,{}\[\];]|\s/
-function needsQuotes(s, extra = []) {
-  const chars = [...UNSAFE, ...extra]
-  return (
-    s === "" ||
-    s.trim() !== s ||
-    RESERVED.has(s) ||
-    !Number.isNaN(Number(s)) ||
-    chars.some((c) => s.includes(c)) ||
-    [...s].some((c) => c.charCodeAt(0) < 32)
-  )
-}
+const needsQuotes = (s) => !Number.isNaN(Number(s)) || UNSAFE_REGEX.test(s)
+const keyNeedsQuotes = (s) => !Number.isNaN(Number(s)) || UNSAFE_KEY_REGEX.test(s)
 const quote = (s) => (needsQuotes(s) ? JSON.stringify(s) : s)
-const quoteKey = (s) => (needsQuotes(s, ["."]) ? JSON.stringify(s) : s)
+const quoteKey = (s) => (keyNeedsQuotes(s) ? JSON.stringify(s) : s)
 function getFoldPath(value) {
   const path = []
   let current = value
@@ -119,7 +111,7 @@ function stringifyObject(obj, atLineStart = false) {
   const keys = Object.keys(obj)
   const pair = (k, pretty) => {
     const val = obj[k]
-    if (!needsQuotes(k, ["."]) && val !== null && typeof val === "object" && !Array.isArray(val)) {
+    if (!keyNeedsQuotes(k) && val !== null && typeof val === "object" && !Array.isArray(val)) {
       const fold = getFoldPath(val)
       if (fold) {
         const foldedKey = `${k}.${fold.path.join(".")}`
