@@ -4,7 +4,7 @@
     "type": "git",
     "url": "https://github.com/creationix/jot"
   },
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "LLM and human friendly JSON alternative",
   "type": "module",
   "main": "./dist/jot.cjs",
