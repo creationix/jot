@@ -1,5 +1,7 @@
 # Jot Format
 
+[![Unit Tests](https://github.com/creationix/jot/actions/workflows/ci.yml/badge.svg?event=push)](https://github.com/creationix/jot/actions/workflows/ci.yml)
+
 Jot is a compact, human-readable JSON variant that uses fewer tokens for LLM applications.
 
 **JSON:**
