@@ -1,5 +1,7 @@
-import { describe, test, expect } from "bun:test"
-import { stringify, parse } from "./jot"
+import { readdirSync, readFileSync } from "node:fs"
+import { join } from "node:path"
+import { describe, expect, test } from "bun:test"
+import { parse, stringify } from "./jot.ts"
 
 describe("stringify", () => {
   test("null", () => expect(stringify(null)).toBe("null"))
@@ -38,7 +40,13 @@ describe("stringify", () => {
   })
 
   describe("tables", () => {
-    test("uniform table", () => expect(stringify([{ a: 1, b: 2 }, { a: 3, b: 4 }])).toBe("{{:a,b;1,2;3,4}}"))
+    test("uniform table", () =>
+      expect(
+        stringify([
+          { a: 1, b: 2 },
+          { a: 3, b: 4 },
+        ]),
+      ).toBe("{{:a,b;1,2;3,4}}"))
     test("3-row table", () => expect(stringify([{ x: 1 }, { x: 2 }, { x: 3 }])).toBe("{{:x;1;2;3}}"))
     test("mixed schema with reuse", () => expect(stringify([{ a: 1 }, { a: 2 }, { b: 3 }])).toBe("{{:a;1;2;:b;3}}"))
     test("no reuse", () => expect(stringify([{ a: 1 }, { b: 2 }])).toBe("[{a:1},{b:2}]"))
@@ -63,7 +71,11 @@ describe("parse", () => {
   })
 
   describe("tables", () => {
-    test("table", () => expect(parse("{{:a,b;1,2;3,4}}")).toEqual([{ a: 1, b: 2 }, { a: 3, b: 4 }]))
+    test("table", () =>
+      expect(parse("{{:a,b;1,2;3,4}}")).toEqual([
+        { a: 1, b: 2 },
+        { a: 3, b: 4 },
+      ]))
     test("schema change", () => expect(parse("{{:a;1;:b;2}}")).toEqual([{ a: 1 }, { b: 2 }]))
   })
 })
@@ -81,9 +93,23 @@ describe("round-trip", () => {
     ["simple object", { a: 1, b: 2 }],
     ["nested 1 level", { a: { b: 1 } }],
     ["nested 2 levels", { a: { b: { c: 1 } } }],
-    ["uniform table", [{ a: 1, b: 2 }, { a: 3, b: 4 }]],
+    [
+      "uniform table",
+      [
+        { a: 1, b: 2 },
+        { a: 3, b: 4 },
+      ],
+    ],
     ["mixed schema", [{ a: 1 }, { b: 2 }]],
-    ["nested table", { users: [{ id: 1, name: "Alice" }, { id: 2, name: "Bob" }] }],
+    [
+      "nested table",
+      {
+        users: [
+          { id: 1, name: "Alice" },
+          { id: 2, name: "Bob" },
+        ],
+      },
+    ],
     ["key with dot", { "a.b": 1 }],
     ["key with semicolon", { "x;y": "test" }],
     ["string with semicolon", "a;b"],
@@ -99,12 +125,8 @@ describe("round-trip", () => {
 })
 
 describe("samples", () => {
-  const { readdirSync, readFileSync } = require("fs")
-  const { join } = require("path")
-
-  const samplesDir = join(__dirname, "samples")
-  const jsonFiles = readdirSync(samplesDir)
-    .filter((f: string) => f.endsWith(".json") && !f.includes(".pretty."))
+  const samplesDir = join(import.meta.dir, "../samples")
+  const jsonFiles = readdirSync(samplesDir).filter((f: string) => f.endsWith(".json") && !f.includes(".pretty."))
 
   for (const jsonFile of jsonFiles) {
     const baseName = jsonFile.replace(".json", "")
